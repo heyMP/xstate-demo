@@ -7,7 +7,7 @@
   <meta name="Description" content="Put your description here.">
   <base href="/">
   <link rel="stylesheet" href="https://ux.redhat.com/assets/rhds.min.css">
-  <title>rhpt-my-trials-app</title>
+  <title>my-app</title>
   <style>
     iframe {
       display: block;
@@ -18,13 +18,13 @@
 </head>
 
 <body>
-  <rhpt-my-trials-app></rhpt-my-trials-app>
+  <my-app></my-app>
 
   <script type="module">
     import {inspect} from '@xstate/inspect';
-    inspect({iframe: false})
+    inspect({ iframe: false })
   </script>
-  <script type="module" src="./out-tsc/src/rhpt-my-trials-app.js"></script>
+  <script type="module" src="./out-tsc/src/my-app.js"></script>
  </body>
 
 </html>

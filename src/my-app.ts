@@ -1,41 +1,47 @@
-import { LitElement, html, css, TemplateResult } from 'lit';
-import { property } from 'lit/decorators/property.js';
+import { LitElement, TemplateResult, html, css, PropertyValueMap } from 'lit';
 import { customElement } from 'lit/decorators/custom-element.js';
-import "@rhpt/elements/rhpt-my-trials/rhpt-my-trials.js";
-import './elements/child.js';
+import { interpret } from 'xstate';
+import { ActorController } from './lib/xstate-controller.js';
 import { globalMachine } from "./machines/globalMachine.js";
 import { SendEvent } from './lib/events.js';
-import { XstateController } from './lib/machine-controller.js';
+import './elements/child.js';
+import './elements/initializer.js';
 
-@customElement('rhpt-my-trials-app')
-export class RhptMyTrialsApp extends LitElement {
+const actor = interpret(globalMachine, { devTools: true }).start();
+
+@customElement('my-app')
+export class MyApp extends LitElement {
   static styles = css``;
 
-  public xstate = new XstateController(this);
+  public actorController = new ActorController(this, actor);
 
-  @property({ type: Object, attribute: false })
-  globalMachine?: typeof globalMachine;
-
-  updated(changedProperties: any) {
-    if (changedProperties.has('globalMachine') && this.globalMachine !== undefined) {
-      this.xstate.updateMachine(this.globalMachine);
-    }
-  }
+  // updateActor(actor: InterpreterFrom<typeof globalMachine>) {
+  //   this.actorController = new ActorController(this, actor);
+  // }
 
   render() {
     // eslint-disable-next-line no-shadow
-    const { state } = this.xstate
+    const state = actor.getSnapshot();
+
+    // console.log(state);
 
     const ret: Array<TemplateResult> = [];
     if (state?.matches("initializing")) {
+      const actor = state.children.initializerActor;
       ret.push(html`
-        Loading....
+        <my-app-initializer .actor=${actor}></my-app-initializer>
       `);
     }
     else if (state?.matches("idle")) {
       ret.push(html`
-        <rhpt-my-trials .trials=${state.context.offers} .user=${state.context.user}></rhpt-my-trials>
-        <rhpt-my-trials-child .xstate=${this.xstate}></rhpt-my-trials-child>
+        ...Idle
+        <div>Username: ${state?.context.user.name}</div>
+        <div><my-app-child .actor=${actor}></my-app-child></div>
+      `);
+    }
+    else if (state?.matches("error")) {
+      ret.push(html`
+        ERROR 🚨
       `);
     }
 
@@ -65,7 +71,7 @@ export class RhptMyTrialsApp extends LitElement {
   // eslint-disable-next-line class-methods-use-this
   sendEventHandler(e: Event) {
     if (e instanceof SendEvent) {
-      this.xstate?.globalActor?.send(e.event);
+      actor.send(e.event);
     }
   }
 }
